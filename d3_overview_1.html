@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Updating Values in a Graph</title>
+		<link href="https://fonts.googleapis.com/css?family=Cabin" rel="stylesheet"> 
+		<script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="d3.css">
+	</head>
+	<body>
+	
+	<h1><b>Data Visualisation with D3</b></h1>
+	<p class="info">D3.js is a JavaScript data visualisation library designed for creating interactive, dynamic visualisations in web browsers. It allows the user to manipulate
+	documents based on data which is made possible using <a href="http://www.w3schools.com/html/html_intro.asp" target="_blank">HTML (Hypertext Markup Language)</a>, 
+	<a href="http://www.w3schools.com/svg/" target="_blank">SVG (Scalable Vector Graphics)</a>, and <a href="http://www.w3schools.com/css/css_intro.asp" target="_blank">
+	CSS (Cascading Style Sheets)</a>. </p>
+	<h2>1. Updating values in graph:</h2>
+	<br/>
+	<p class="info"></p>
+	<div>
+	<button type="button">Update Values</button>
+	</div>
+	<br/>
+		
+		<script type="text/javascript">
+			var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13,
+							11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
+			
+			var w = 800;
+			var h = 500;
+			
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h)
+						.attr("class", "svgs")
+						.style("background-color", "white");
+						
+			var xScale = d3.scale.ordinal()
+							.domain(d3.range(dataset.length))
+							.rangeRoundBands([0, w], 0.05);
+									
+			var yScale = d3.scale.linear()
+							.domain([0, d3.max(dataset)])
+							.range([0, h]);
+
+			
+			svg.selectAll("rect")
+				.data(dataset)
+				.enter()
+				.append("rect")
+				.on("mouseover", function(d) {
+					d3.select(this)
+						.attr("fill", "orange");
+				})
+				.on("mouseout", function(d) {
+					d3.select(this)
+					.transition()
+					.duration(250)
+					.attr("fill", "rgb(" + (d * 10) + ", 0, 100)");
+				})
+				.attr("x", function(d, i) {
+					return xScale(i);
+				})
+				.attr("y", function (d) {
+					return h - yScale(d);
+				})
+				.attr("width", xScale.rangeBand())
+				.attr("height", function(d) {
+					return yScale(d);
+				})
+				.attr("fill", function(d) {
+					return "rgb(" + (d * 10) + ", 0, 100)";
+				});
+				
+			svg.selectAll("text")
+				.data(dataset)
+				.enter()
+				.append("text")
+				.text(function(d) {
+					return d;
+				})
+				.attr("x", function(d, i) {
+					return xScale(i) + xScale.rangeBand() / 2;
+				})
+				.attr("y", function(d) {
+					return h - yScale(d) + 14;
+				})
+				.attr("class", "bar")
+				.attr("font-family", "sans-serif")
+				.attr("font-size", "12.3px")
+				.attr("fill", "white")
+				.attr("text-anchor", "middle");
+			
+			d3.select("button")
+				.on("click", function() {
+				
+					var numberOfValues = dataset.length;
+					var maxNum = 100;
+					dataset = [];
+						
+					for (var i = 0; i < numberOfValues; i++) {
+						var newNum = Math.floor(Math.random() * maxNum);
+						dataset.push(newNum);
+					}
+					yScale.domain([0, d3.max(dataset)]);
+
+					svg.selectAll("rect")
+						.data(dataset) 
+						.transition()
+						.delay(function(d, i){
+							return i / dataset.length * 1000;
+						})
+						.duration(600)
+						.attr("y", function(d) {
+							return h - yScale(d);
+						})
+						.attr("height", function(d) {
+							return yScale(d);
+						})
+						.attr("fill", function(d) {
+							return "rgb(" + (d * 10) + ", 0 , 100)";
+						});
+					
+					svg.selectAll("text")
+						.data(dataset)
+						.transition()
+						.delay(function(d,i){
+							return i / dataset.length * 1000;
+						})
+						.duration(600)
+						.text(function(d) {
+							return d;
+						})
+						.attr("x", function(d,i) {
+							return xScale(i) + xScale.rangeBand() / 2;
+						})
+						.attr("y", function(d) {
+							return h - yScale(d) + 14;
+						})
+				
+		    });
+			
+		</script>
+		
+	</body>
+</html>
