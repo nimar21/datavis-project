@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Intro + Updates</title>
+		<link href="https://fonts.googleapis.com/css?family=Cabin" rel="stylesheet"> 
+		<script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="d3.css">
+	</head>
+	<body>
+	
+	<!-- Introduction -->
+	<h1><b>Data Visualisation with D3</b></h1>
+	<p class="info">D3.js is a JavaScript data visualisation library designed for creating interactive, dynamic visualisations in web browsers. It allows the user to manipulate
+	documents based on data which is made possible using <a href="http://www.w3schools.com/html/html_intro.asp" target="_blank">HTML (Hypertext Markup Language)</a>, 
+	<a href="http://www.w3schools.com/svg/" target="_blank">SVG (Scalable Vector Graphics)</a>, and <a href="http://www.w3schools.com/css/css_intro.asp" target="_blank">
+	CSS (Cascading Style Sheets)</a>. Data can be bound to the Document Object Model (more commonly referred to as the DOM) and then
+	data-driven transformations can be applied to the document. D3 allows the user to have great control over the final visualisation and
+	I have personally found it to be an incredibly powerful tool that should interest most programmers who want to be able to carefully
+	craft how their data comes to life. <br/><br/>
+	The purpose of the following examples is to give an overview of different ways in which D3 can be used with your data to make visualisations
+	that are aesthetically pleasing and effective.</p>
+	<br/>
+	<h2>Updating Data:</h2>
+	<p class="info">The following visualisation demonstrates how D3 can seamlessly manage data updates in real time. For this example, we start out with
+	an initial defined set of data; then, on each click of the update button, the creation of a brand new set of randomly-generated numbers
+	is triggered which is reflected in the visualisation. One useful function which helps to make the update appear so smooth is
+	<i>transition()</i>. This function animates the transition of a DOM element from one state to another by gradually moving it through
+	all interval values between the start point and end point of the transition. The length of the transition can be dictated using the
+	<i>duration()</i> function while any delays one may want to occur before the transition starts can be programmed in using the 
+	<i>delay()</i> function.<br/><br/> Note also how placing the mouse over any bar causes that bar to change colour; moving it away will cause it
+	to return to its original colour. This is achieved by using <i>event listeners</i> which are functions that "listen" for certain
+	events such as the click of a mouse or hovering the cursor over a particular region. Also, the colours of the bars in this example
+	reflect the data values that they are representing; the higher the value, the brighter the colour. The correct colour of each bar must
+	then be recalculated each time the data is updated.</p>
+	<br/>
+	<div>
+	<button type="button">Update Values</button>
+	</div>
+	<br/>
+	<br/>
+		
+		<script type="text/javascript">
+		
+			// Define your data points
+			var sample_data = [ 8, 15, 18, 21, 25, 23, 17, 20, 12, 18, 10, 19, 18, 22, 16, 14, 19, 6, 12 ];
+			
+			// Define the width and height of the SVG element
+			var width = 800;
+			var height = 500;
+			
+			// Create the SVG element which will contain the visualisation
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", width)
+						.attr("height", height)
+						.attr("class", "svgs")
+						.style("background-color", "white");
+						
+			// Define the scale for the x-axis
+			var xScale = d3.scale.ordinal()
+							.domain(d3.range(sample_data.length))
+							.rangeRoundBands([0, width], 0.04);
+									
+			// Define the scale for the y-axis						
+			var yScale = d3.scale.linear()
+							.domain([0, d3.max(sample_data)])
+							.range([0, height]);
+
+			
+			// Create a rect object for each data point you have defined - these will look like bars when generated 
+			svg.selectAll("rect")
+				.data(sample_data)
+				.enter()
+				.append("rect")
+				// Create event listener to transition bars to orange when the mouse hovers over them
+				.on("mouseover", function(d) {
+					d3.select(this)
+						.attr("fill", "orange");
+				})
+				.on("mouseout", function(d) {
+					d3.select(this)
+					.transition()
+					.duration(250)
+					.attr("fill", "rgb(" + (d * 10) + ", 0, 100)");
+				})
+				// Calculate the x position of the bar using the previously defined xScale function
+				.attr("x", function(d, i) {
+					return xScale(i);
+				})
+				// Calculate the y position of the bar using the previously defined yScale function
+				.attr("y", function (d) {
+					return height - yScale(d);
+				})
+				// Define attributes for the bars
+				.attr("width", xScale.rangeBand())
+				.attr("height", function(d) {
+					return yScale(d);
+				})
+				.attr("fill", function(d) {
+					return "rgb(" + (d * 10) + ", 0, 100)";
+				});
+				
+			// Create text elements to describe each data point	
+			svg.selectAll("text")
+				.data(sample_data)
+				.enter()
+				.append("text")
+				.text(function(d) {
+					return d;
+				})
+				// Calculate x and y position of each text element using the xScale and yScale functions
+				.attr("x", function(d, i) {
+					return xScale(i) + xScale.rangeBand() / 2;
+				})
+				.attr("y", function(d) {
+					return height - yScale(d) + 14;
+				})
+				// Add attributes for the text
+				.attr("class", "bar")
+				.attr("font-family", "sans-serif")
+				.attr("font-size", "12.3px")
+				.attr("fill", "white")
+				.attr("text-anchor", "middle");
+			
+			// Add an event listener which will listen for the click of the button element
+			d3.select("button")
+				.on("click", function() {
+				
+					var numberOfValues = sample_data.length;
+					var maxNum = 30;
+					sample_data = [];
+				
+					// Generate a new random set of data which contains the same number of points as before
+					for (var i = 0; i < numberOfValues; i++) {
+						var newNum = Math.floor(Math.random() * maxNum);
+						sample_data.push(newNum);
+					}
+					yScale.domain([0, d3.max(sample_data)]);
+
+					// Re-create the rect elements (bars) for each new data point, this time with added transition functions
+					svg.selectAll("rect")
+						.data(sample_data) 
+						.transition()
+						.delay(function(d, i){
+							return i / sample_data.length * 1000;
+						})
+						.duration(600)
+						.attr("y", function(d) {
+							return height - yScale(d);
+						})
+						.attr("height", function(d) {
+							return yScale(d);
+						})
+						.attr("fill", function(d) {
+							return "rgb(" + (d * 10) + ", 0 , 100)";
+						});
+					
+					// Re-create the text elements for each new data point generated
+					svg.selectAll("text")
+						.data(sample_data)
+						.transition()
+						.delay(function(d,i){
+							return i / sample_data.length * 1000;
+						})
+						.duration(600)
+						.text(function(d) {
+							return d;
+						})
+						.attr("x", function(d,i) {
+							return xScale(i) + xScale.rangeBand() / 2;
+						})
+						.attr("y", function(d) {
+							return height - yScale(d) + 14;
+						})
+				
+		    });
+			
+		</script>
+		
+	</body>
+</html>

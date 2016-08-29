@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Adding and Removing Value from a Graph</title>
+		<script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="d3.css">
+		<link href="https://fonts.googleapis.com/css?family=Cabin" rel="stylesheet"> 
+	</head>
+	
+	<body>
+		<!-- Overview -->
+		<h2>Adding and removing values from a graph:</h2>
+		<p class="info">The following graph demonstrates how D3 can allow you to quickly add and remove items from your graph. This functionality is an example of how
+		D3 varies from other visualisation libraries I have used; while something like this would often be made possible using a simple function, D3 requires the programmer to
+		code every detail of such a change themselves. For example, for each addition or removal of an item to/from the graph, the programmer must recalibrate the scale of the
+		x-axis to take into account the new number of items, recalculate the new positions of all the text labels, and code the manner in which the transitions will occur,
+		amongst other things. This graph also implements an event listener upon the user moving the mouse over any of the bars; the bars change colour then transition
+		back to their original colour, the RGB values of which are calculated each time. As with the other examples, the higher the value of the data point, the brighter
+		the colour of the bar.</p>
+		<br/>
+		<div>
+			<button id="add" type="button">Add Value</button>
+				<button id="remove" type="button">Remove Value</button>
+		</div>
+		<br/>
+		<br/>
+		<script type="text/javascript">
+		
+			// Define data points as key - value pairs
+			var sample_data = [ { key: 0, value: 7 },
+							{ key: 1, value: 15 },
+							{ key: 2, value: 11 },
+							{ key: 3, value: 17 },
+							{ key: 4, value: 21 },
+							{ key: 5, value: 27 },
+							{ key: 6, value: 24 },
+							{ key: 7, value: 20 },
+							{ key: 8, value: 18 },
+							{ key: 9, value: 23 },
+							{ key: 10, value: 16 },
+							{ key: 11, value: 10 },
+							{ key: 12, value: 14 },
+							{ key: 13, value: 19 },
+							{ key: 14, value: 22 },
+							{ key: 15, value: 20 },
+							{ key: 16, value: 17 },
+							{ key: 17, value: 24 },
+							{ key: 18, value: 20 },
+							{ key: 19, value: 18 }
+						];
+			
+			// Define width and height of SVG element
+			var width = 800;
+			var height = 500;
+			
+			// Create SVG element which will contain visualisation
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", width)
+						.attr("height", height)
+						.attr("class", "svgs")
+						.style("background-color", "white");
+						
+			// Define x scale function
+			var xScale = d3.scale.ordinal()
+							.domain(d3.range(sample_data.length))
+							.rangeRoundBands([0, width], 0.05);
+									
+			// Define y scale function
+			var yScale = d3.scale.linear()
+							.domain([0, d3.max(sample_data, function(d) {
+								return d.value;
+							})])
+							.range([0, height]);
+			
+			// Define function for retrieving key
+			var key = function(d) {
+				return d.key;
+			};
+			
+			// Create rect elements (bars) for each data point 
+			svg.selectAll("rect")
+				.data(sample_data, key)
+				.enter()
+				.append("rect")
+				// Create event listener which triggers a colour change upon moving the cursor over the bars
+				.on("mouseover", function() {
+					d3.select(this)
+						.attr("fill", "#ADD8E6");
+				})
+				// And then make the bars return to their initial colour on mouseout
+				.on("mouseout", function(d) {
+					d3.select(this)
+					.transition()
+					.duration(300)
+					.attr("fill", "rgb(0, 0, " + (d.value * 10) + ")");
+				})
+				// Define various attributes of bars
+				.attr("x", function(d, i) {
+					return xScale(i);
+				})
+				.attr("y", function(d) {
+					return height - yScale(d.value);
+				})
+				.attr("width", xScale.rangeBand())
+				.attr("height", function(d) {
+					return yScale(d.value);
+				})
+				.attr("fill", function(d) {
+					return "rgb(0, 0, " + (d.value * 10) + ")";
+				});
+				
+			// Create text elements for each data point
+			svg.selectAll("text")
+				.data(sample_data, key)
+				.enter()
+				.append("text")
+				.text(function(d) {
+					return d.value;
+				})
+				// Define text attributes
+				.attr("x", function(d, i) {
+					return xScale(i) + xScale.rangeBand() / 2;
+				})
+				.attr("y", function(d) {
+					return height - yScale(d.value) + 14;
+				})
+				.attr("class", "bar")
+				.attr("font-family", "sans-serif")
+				.attr("font-size", "12.3px")
+				.attr("fill", "white")
+				.attr("text-anchor", "middle");
+			
+			// Add an event listener which listens for the click of one of the buttons
+			d3.selectAll("button")
+				.on("click", function() {
+					 
+					 // Check the id of the button
+					var buttonID = d3.select(this).attr("id");
+					// If the add button has been clicked...
+					if (buttonID == "add") {
+					 
+						var maxNum = 25;
+						var newNum = Math.floor(Math.random() * maxNum);
+						var lastKeyVal = sample_data[sample_data.length - 1].key;
+						console.log(lastKeyVal);
+						// Add a new randomly-generated data point to the dataset
+						sample_data.push({
+							key: lastKeyVal + 1,
+							value: newNum
+						});
+					} 
+					// Or if the remove button has been clicked, remove the left-most bar
+					else {
+						sample_data.shift();
+					}
+					
+					// Recalibrate the scale of the x and y axis
+					xScale.domain(d3.range(sample_data.length));
+					yScale.domain([0, d3.max(sample_data, function(d) {
+						return d.value;
+					})]);
+					 
+					var bars = svg.selectAll("rect")
+									.data(sample_data, key);
+					// Re-create bars from new data set				
+					bars.enter()
+						.append("rect")
+						.attr("x", width)
+						.attr("y", function(d) {
+							return height - yScale(d.value);
+						})
+						// Create mouseover and mouseout event listener once more
+						.on("mouseover", function() {
+							d3.select(this)
+								.attr("fill", "#ADD8E6");
+						})
+						.on("mouseout", function(d) {
+							d3.select(this)
+								.transition()
+								.duration(300)
+								.attr("fill", "rgb(0, 0, " + (d.value * 10) + ")");
+						})
+						// Add attributes
+						.attr("width", xScale.rangeBand())
+						.attr("height", function(d) {
+							return yScale(d.value);
+						})
+						.attr("fill", function(d) {
+							return "rgb(0, 0," + (d.value * 10) + ")";
+						});
+						
+					// Define how transitions will occur
+					bars.transition()
+						.duration(450)
+						.attr("x", function(d, i) {
+							return xScale(i);
+						})
+						.attr("y", function(d) {
+							return height - yScale(d.value);
+						})
+						.attr("width", xScale.rangeBand())
+						.attr("height", function(d) {
+							return yScale(d.value);
+						});
+					
+					bars.exit()
+						.transition()
+						.duration(450)
+						.attr("x", -xScale.rangeBand())
+						.remove();
+						
+					var text = svg.selectAll("text")
+						.data(sample_data, key);
+					
+					// Re-add text elements to new set of bars
+					text.enter()
+						.append("text")
+						.text(function(d) {
+							return d.value;
+						})
+						.attr("text-anchor", "middle")
+						.attr("x", width)
+						.attr("y", function(d) {
+							return height - yScale(d.value) + 14;
+						})
+						.attr("font-family", "sans-serif")
+						.attr("font-size", "12.3px")
+						.attr("fill", "white");
+						
+					// Define text transitions
+					text.transition()
+						.duration(450)
+						.attr("x", function(d, i) {
+							return xScale(i) + xScale.rangeBand() / 2;
+						});
+						
+					text.exit()
+						.transition()
+						.duration(450)
+						.attr("x", -xScale.rangeBand())
+						.remove();
+				});
+			
+		</script>
+	</body>
+</html>

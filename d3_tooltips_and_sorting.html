@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Tooltips + Sorting</title>
+		<script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="d3.css">
+		<link href="https://fonts.googleapis.com/css?family=Cabin" rel="stylesheet">
+		<style type="text/css">
+			rect:hover {
+				fill: orange;
+			}
+			
+		</style>
+	</head>
+	<body>
+		<!-- Overview -->
+		<h2>Using tooltips and sorting items:</h2>
+		<p class="info">Toolips are GUI elements which appear when a user hovers a cursor over an item but does not click it. They generally display a small piece of
+		information about the item which is being hovered over and can easily be implemented using D3. Tooltips can be observed below by hovering the cursor over any
+		bar (note that this will usually not work if you are viewing this on a mobile device as there is no cursor in that case).
+		<br/>
+		<br/>
+		This graph also allows the user to <i>sort</i> the values within it in either ascending or descending order. Click on the 
+		<i>Sort Values</i> button and observe how values are first sorted from lowest to highest; another click
+		will then sort them from highest to lowest, and then the process repeats.</p>
+		<br/>
+		
+		<div id="tooltip" class="hidden">
+			<p><strong>Sample Tooltip</strong></p>
+			<p>Bar Value: <span id="value">100</span></p>
+		</div>
+		
+		<div>
+			<button type="button">Sort Values</button>
+		</div>
+		<br/>
+		<br/>
+		
+		<script type="text/javascript">
+		
+			// Create data set
+			var sample_data = [ 8, 15, 18, 21, 25, 23, 17, 20, 12, 18, 10, 19, 18, 22, 16, 14, 19, 6, 12 ];
+			
+			// Define width and height of SVG
+			var width = 800;
+			var height = 500;
+			
+			// Create SVG element which holds visualisation
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", width)
+						.attr("height", height)
+						.attr("class", "svgs")
+						.style("background-color", "white");
+						
+			// Define x scale function
+			var xScale = d3.scale.ordinal()
+							.domain(d3.range(sample_data.length))
+							.rangeRoundBands([0, width], 0.05);
+									
+			// Define y scale function
+			var yScale = d3.scale.linear()
+							.domain([0, d3.max(sample_data)])
+							.range([0, height]);
+							
+			// Create rect elements (bars)
+			svg.selectAll("rect")
+				.data(sample_data)
+				.enter()
+				.append("rect")
+				// Define attributes
+				.attr("x", function(d, i) {
+					return xScale(i);
+				})
+				.attr("y", function(d) {
+					return height - yScale(d);
+				})
+				.attr("width", xScale.rangeBand())
+				.attr("height", function(d) {
+					return yScale(d);
+				})
+				.attr("fill", function(d) {
+					return "rgb(" + (d * 10) + ", 0, 100)";
+				})
+				// Create event listeners for mouseover and mouseout
+				.on("mouseover", function(d) {
+				
+					var xPos = parseFloat(d3.select(this).attr("x")) + xScale.rangeBand() / 2;
+					var yPos = parseFloat(d3.select(this).attr("y")) / 2 + height / 2;
+					
+					d3.select("#tooltip")
+						.style("left", xPos + "px")
+						.style("top", yPos + "px")
+						.select("#value")
+						.text(d);
+						
+					d3.select("#tooltip").classed("hidden", false);
+			
+				})
+				
+				.on("mouseout", function() {
+				
+					d3.select("#tooltip").classed("hidden", true);
+				
+				})
+				
+			// Create an event listener which triggers the sorting of the bars upon a button click
+			d3.select("button")	
+				.on("click", function() {
+					sortBars();
+				});
+				
+				var sortOrder = false;
+				var sortBars = function() {
+				
+					sortOrder = !sortOrder;
+					
+					svg.selectAll("rect")
+						// Sort bars either in ascending or descending order depending on what the current order is set to
+						.sort(function(a, b) {
+							if (sortOrder) {
+								return d3.ascending(a, b);
+							} else {
+								return d3.descending(a, b);
+							}
+						})
+						.transition()
+						.delay(function(d, i) {
+							return i * 50;
+						})
+						.duration(1000)
+						.attr("x", function(d, i) {
+							return xScale(i);
+						});
+				
+				};
+				
+		</script>
+	</body>
+</html>

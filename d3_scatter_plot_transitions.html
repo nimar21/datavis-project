@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>	
+	<head>
+		<title>Scatterplots</title>
+		<script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="d3.css">
+		<link href="https://fonts.googleapis.com/css?family=Cabin" rel="stylesheet"> 
+	</head>
+	<body>
+		<!-- Overview -->
+		<h2>Updating values in a scatter plot:</h2>
+
+		<p class="info">This example is one of the most effective at demonstrating how clever D3 is when faced with changes to the existing data. Not only do we
+		see how the data points seamlessly move to their new points on the graph upon each click of the <i>Update Values</i> button, but we can also observe how the values of the x and y axes are recalculated and
+		updated instantaneously to reflect the values of the new data. Again, as this example is for illustrative purposes, the new data points are being randomly
+		generated each time. </p>
+		
+		<br/>
+		<div>
+		<button type="button">Update Values</button>
+		</div>
+		
+		<br/>
+		<br/>
+		
+		<script type="text/javascript">
+
+			var sample_data = [];
+			var numPoints = 40;
+			var maxRange = Math.random() * 1000;
+			
+			// Create a randomly generated data set
+			for (var i = 0; i < numPoints; i++) {
+				var newNum1 = Math.floor(Math.random() * maxRange);
+				var newNum2 = Math.floor(Math.random() * maxRange);
+				sample_data.push([newNum1, newNum2]);
+			}
+			
+			// Define width and height of SVG element as well as spacing attribute
+			var width = 800;
+			var height = 600;
+			var space = 30;
+			
+			// Create SVG element which will contain visualisation
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", width)
+						.attr("height", height)
+						.attr("class", "svgs")
+						.style("background-color", "white");
+			
+			// Define x scale function
+			var xScale = d3.scale.linear()
+								.domain([0, d3.max(sample_data, function(d) {
+									return d[0];
+								})])
+								.range([space, width - space * 2]);
+			
+			// Define y scale function
+			var yScale = d3.scale.linear()
+								.domain([0, d3.max(sample_data, function(d) {
+									return d[1];
+								})])
+								.range([height - space, space]);
+			
+			// Create x axis
+			var xAxis = d3.svg.axis()
+							.scale(xScale)
+							.orient("bottom")
+							.ticks(7);
+			
+			// Create y axis 
+			var yAxis = d3.svg.axis()
+							.scale(yScale)
+							.orient("left")
+							.ticks(7);
+			
+			// Create a clipPath and define attributes for it
+			svg.append("clipPath")
+				.attr("id", "chart-area")
+				.append("rect")
+				.attr("x", space)
+				.attr("y", space)
+				.attr("width", width - space * 3)
+				.attr("height", height - space * 2);
+			
+			// Create a g element which groups circles together and then references the above clipPath via its ID
+			svg.append("g")
+				.attr("id", "circles")
+				.attr("clip-path", "url(#chart-area)")
+				.selectAll("circle")
+				.data(sample_data)
+				.enter()
+				.append("circle")
+				.on("mouseover", function() {
+					d3.select(this)
+						.attr("fill", "orange");
+				})
+				.on("mouseout", function(d) {
+					d3.select(this)
+					.transition()
+					.duration(250)
+					.attr("fill", "rgb(0, 0, " + (d * 10) + ")");
+				})
+				.attr("cx", function(d) {
+					return xScale(d[0]);
+				})
+				.attr("cy", function(d) {
+					return yScale(d[1]);
+				})
+				.attr("r", 3);
+			
+			// Create the x axis
+			svg.append("g")
+				.attr("class", "x axis")
+				.attr("transform", "translate(0," + (height - space) + ")")
+				.call(xAxis);
+			
+			// Create the y axis
+			svg.append("g")
+				.attr("class", "y axis")
+				.attr("transform", "translate(" + space + ",0)")
+				.call(yAxis);
+			
+			// Create an event listener for clicking the update button
+			d3.select("button")
+				.on("click", function() {
+				
+					var valuesAmount = sample_data.length;
+					var maxRange = Math.random() * 1000;
+					
+					sample_data = [];
+					
+					// Create a new set of randomly-generated data
+					for (var i = 0; i < valuesAmount; i++) {
+						var newNum1 = Math.floor(Math.random() * maxRange);
+						var newNum2 = Math.floor(Math.random() * maxRange);
+						sample_data.push([newNum1,newNum2]);
+					}
+					
+					xScale.domain([0, d3.max(sample_data, function(d) {
+						return d[0];
+					})]);
+					
+					yScale.domain([0, d3.max(sample_data, function(d) {
+						return d[1];
+					})]);
+					
+					// Create new set of circles for new dataset
+					svg.selectAll("circle")
+						.data(sample_data)
+						.transition()
+						.duration(600)
+					
+						.attr("cx", function(d) {
+							return xScale(d[0]);
+						})
+						.attr("cy", function(d) {
+							return yScale(d[1]);
+						})
+						
+					// Update x axis	
+					svg.select(".x.axis")
+						.transition()
+						.duration(500)
+						.call(xAxis);
+						
+					// Update y axis
+					svg.select(".y.axis")
+						.transition()
+						.duration(500)
+						.call(yAxis);
+				});
+				
+			
+		</script>
+	</body>
+</html>
